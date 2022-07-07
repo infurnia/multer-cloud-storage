@@ -44,7 +44,7 @@ export default class MulterGoogleCloudStorage implements multer.StorageEngine {
 			return undefined;
 	}
 
-	private getBlobFileReference( req, file ): GoogleCloudBlobFileReference | false {
+	private async getBlobFileReference ( req, file ): Promise<GoogleCloudBlobFileReference | false> {
 		const blobFile: GoogleCloudBlobFileReference = {
 			destination: '',
 			filename: '',
@@ -67,18 +67,20 @@ export default class MulterGoogleCloudStorage implements multer.StorageEngine {
 			blobFile.destination = escDestination;
 		});
 		
-		this.getFilename(req, file, (err, filename) => {
-			if (err) {
-				return false;
-			}
-
-			blobFile.filename = urlencode(filename
-				.replace(/^\.+/g, '')
-				.replace(/^\/+/g, '')
-				.replace(/\r|\n/g, '_')
-			);
+		let file_name_set_promise = new Promise((resolve, reject) => { 
+			this.getFilename(req, file, (err, filename) => {
+				if (err) {
+					return reject(false);
+				}
+				blobFile.filename = urlencode(filename
+					.replace(/^\.+/g, '')
+					.replace(/^\/+/g, '')
+					.replace(/\r|\n/g, '_')
+				);
+				return resolve(blobFile);
+			});
 		});
-
+		await file_name_set_promise;
 		return blobFile;
 	}
 
@@ -130,8 +132,8 @@ export default class MulterGoogleCloudStorage implements multer.StorageEngine {
 		this.options = opts;
 	}
 
-	_handleFile = (req, file, cb) => {
-		const blobFile = this.getBlobFileReference( req, file );
+	_handleFile = async (req, file, cb) => {
+		const blobFile = await this.getBlobFileReference( req, file );
 		if(blobFile !== false) {
 			var blobName = blobFile.destination + blobFile.filename;
 			var blob = this.gcsBucket.file(blobName);
@@ -168,8 +170,8 @@ export default class MulterGoogleCloudStorage implements multer.StorageEngine {
 				});
 		}
 	}
-	_removeFile =  (req, file, cb) => {
-		const blobFile = this.getBlobFileReference( req, file );
+	_removeFile =  async (req, file, cb) => {
+		const blobFile = await this.getBlobFileReference( req, file );
 		if(blobFile !== false) {
 			var blobName = blobFile.destination + blobFile.filename;
 			var blob = this.gcsBucket.file(blobName);

@@ -19,8 +19,8 @@ export default class MulterGoogleCloudStorage implements multer.StorageEngine {
     getContentType(req: any, file: any): any;
     private getBlobFileReference;
     constructor(opts?: StorageOptions & MulterGoogleCloudStorageOptions);
-    _handleFile: (req: any, file: any, cb: any) => void;
-    _removeFile: (req: any, file: any, cb: any) => void;
+    _handleFile: (req: any, file: any, cb: any) => Promise<void>;
+    _removeFile: (req: any, file: any, cb: any) => Promise<void>;
 }
 export declare function storageEngine(opts?: StorageOptions & MulterGoogleCloudStorageOptions): MulterGoogleCloudStorage;
 export declare type ContentTypeFunction = (req: Request, file: Express.Multer.File) => string | undefined;
